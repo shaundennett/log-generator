@@ -1,0 +1,33 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: log-generator
+  name: log-generator
+spec:
+  replicas: 1
+  selector:
+    app: log-generator
+    deploymentconfig: log-generator
+  template:
+    metadata:
+      labels:
+        app: log-generator
+        deploymentconfig: log-generator
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/development/log-generator:latest
+          imagePullPolicy: Always
+          name: log-generator
+          resources: {}
+  triggers:
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - log-generator
+      from:
+        kind: ImageStreamTag
+        name: log-generator:latest
+        namespace: development
+    type: ImageChange
+  - type: ConfigChange

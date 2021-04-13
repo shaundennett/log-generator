@@ -1,0 +1,5 @@
+Pipfile*
+.vscode
+__pycache__
+.coverage
+*.pyc

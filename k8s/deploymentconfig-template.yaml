@@ -1,0 +1,84 @@
+#############################################################
+# IAIS OpenShift Template for Log-Generator
+#
+# This template is used to generate an instance of the 
+# Log Generator, each instance requires a parameter 
+# supplying to identify the message defnition file that 
+# contains the message definitions for each run
+# 
+# If the parameter is not supplied then a
+# defnition file called "default" is used
+#
+# All files are hosted in /logger/message_definitions/ 
+#
+#
+#############################################################
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: "log-generator"
+message: |-
+  A log-generator is created with messages defined in a specific config file:
+    MESSAGE_DEFINITIONS: "${MESSSAGE_DEFINITION_FILENAME}"
+  For more information about using this template refer to the git repo Readme file for the log-generator project
+metadata:
+  name: log-generator
+  annotations:
+    openshift.io/display-name: log-generator
+    description: Creates a pre-defined set of log messages generated over time defined by a config file
+    openshift.io/provider-display-name: log-generator
+    tags: log-generator
+objects:
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${APP_NAME}
+    name: log-generator
+  spec:
+    replicas: 1
+    selector:
+      app: log-generator
+      deploymentconfig: log-generator
+    template:
+      metadata:
+        labels:
+          app: log-generator
+          deploymentconfig: log-generator
+      spec:
+        containers:
+          - image: image-registry.openshift-image-registry.svc:5000/development/log-generator:latest
+            imagePullPolicy: Always
+            name: ${CONTAINER_NAME}
+            env:
+              - name: MESSAGE_DEFINITIONS
+                value: ${MESSSAGE_DEFINITION_FILENAME}
+            resources: {}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - log-generator
+        from:
+          kind: ImageStreamTag
+          name: log-generator:latest
+          namespace: development
+      type: ImageChange
+    - type: ConfigChange
+#############################################################
+# Template Parameters
+# MESSSAGE_DEFINITION_FILENAME - name of the message cdefinition file containing the log message configs
+#############################################################
+parameters:
+  - name: MESSSAGE_DEFINITION_FILENAME
+    description: The message definition file name . e.g. message-config-01
+    required: true
+    value: default
+  - name: APP_NAME
+    description: The app name override . e.g. log-generator
+    required: true
+    value: log-generator
+  - name: CONTAINER_NAME
+    description: The container name override . e.g. log-generator
+    required: true
+    value: log-generator
